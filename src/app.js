@@ -2,6 +2,7 @@ const express = require("express");
 const path = require("path");
 const app = express();
 const hbs = require("hbs");
+const bcrypt = require("bcryptjs");
 
 require("./db/conn");
 const Register = require("./models/registers");
@@ -51,30 +52,43 @@ app.post("/register", async (req, res) => {
       age:req.body.age,
       password:password,
       confirmpassword:Cpassword
-   });
-  
+   })
+
+   
+
+   console.log("the success part" + registerEmployee);
+
+   const token = await registerEmployee.generateAuthToken();
+   console.log("the token part" + token);
+
    const registered = await registerEmployee.save();
-   console.log(registered);
+   console.log("the page part" + registered);
+   
+   console.log("ERROR");
    res.status(201).render("index");
 
-  }else{
+  } else {
    res.send("password are not matching");
  }
 
     } catch (error) {
-      res.status(400).send(error);
+    console.log(error);
+    res.status(400).send(error.message);
+
     }
 });
 
 
 app.post("/login", async(req, res) =>{
    try {
-      const Email = req.body.email;
+      const email = req.body.email;
       const password = req.body.password;
+ 
+      const useremail = await Register.findOne({email:email});
 
-      const useremail = await Register.findOne({email:Email});
+      const isMatch = await bcrypt.compare(password, useremail.password);
 
-      if (useremail.password === password){
+      if (isMatch){
          res.status(201).render("index");
       }else{
          res.send("password are not matching");
@@ -85,7 +99,6 @@ app.post("/login", async(req, res) =>{
    }
 });
 
-
- app.listen(port, ()=> {
+app.listen(port, ()=> {
     console.log(`server is running at port no ${port}`);
- }); 
+});

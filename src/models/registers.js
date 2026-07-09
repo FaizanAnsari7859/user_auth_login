@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
-const enployeeSchema = new mongoose.Schema({
+const employeeSchema = new mongoose.Schema({
   firstname : {
     type:String,
     required:true
@@ -34,10 +36,49 @@ const enployeeSchema = new mongoose.Schema({
   confirmpassword : {
     type:String,
     required:true
-  }
-  
+  },
+  tokens:[{
+    token:{
+      type:String,
+      required:true
+    }
+  }]
 })
 
-const Register = new mongoose.model("Register",enployeeSchema);
+// generating token
+
+employeeSchema.methods.generateAuthToken = async function () {
+    try {
+        const token = jwt.sign(
+            { _id: this._id.toString() },
+            "mynameisfaizanansariiamafutherdevloper"
+        );
+
+        this.tokens = this.tokens.concat({ token: token });
+        await this.save();
+
+        return token;
+    } catch (error) {
+        console.log(error);
+        throw error;
+    }
+};
+
+//converting password into hash
+employeeSchema.pre("save", async function () {
+    if (this.isModified("password")) {
+        console.log(`Before hash: ${this.password}`);
+
+        this.password = await bcrypt.hash(this.password, 10);
+
+        console.log(`After hash: ${this.password}`);
+
+        // this.confirmpassword = undefined;
+    }
+});
+
+
+//now we need to create a collection
+const Register = new mongoose.model("Register", employeeSchema);
 module.exports = Register
 
