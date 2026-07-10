@@ -65,6 +65,10 @@ body{
     color:#00d4ff;
 }
 
+
+
+
+
 /* Hero */
 
 .hero-content{
@@ -207,14 +211,14 @@ body{
     border: none;
 }
 .register .nav-tabs .nav-link.active{
-    /* width: 120px; */
-    /* color: #0062cc; */
-    /* border: 2px solid #0062cc; */
+    width: 120px;
+    /* color:#0062cc; */
+    border: 2px solid #0062cc;
     border-top-left-radius: 1.5rem;
     border-bottom-left-radius: 1.5rem;
     background: #fff;
     color: #0062cc !important;
-    border: 2px solid #0062cc;
+    /* border: 2px solid #0062cc; */
 }
 .register-heading{
     text-align: center;

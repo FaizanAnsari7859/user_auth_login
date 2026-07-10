@@ -47,16 +47,16 @@ const employeeSchema = new mongoose.Schema({
 
 // generating token
 
-employeeSchema.methods.generateAuthToken = async function () {
+employeeSchema.methods.generateAuthToken = async function() {
     try {
         const token = jwt.sign(
-            { _id: this._id.toString() },
-            "mynameisfaizanansariiamafutherdevloper"
+            {_id: this._id.toString() },
+            process.env.SECRET_KEY
         );
 
         this.tokens = this.tokens.concat({ token: token });
         await this.save();
-
+        
         return token;
     } catch (error) {
         console.log(error);
@@ -65,16 +65,18 @@ employeeSchema.methods.generateAuthToken = async function () {
 };
 
 //converting password into hash
-employeeSchema.pre("save", async function () {
+employeeSchema.pre("save", async function() {
     if (this.isModified("password")) {
-        console.log(`Before hash: ${this.password}`);
+        // console.log(`Before hash: ${this.password}`);
 
         this.password = await bcrypt.hash(this.password, 10);
+        this.confirmpassword = await bcrypt.hash(this.password, 10);
 
-        console.log(`After hash: ${this.password}`);
+        // console.log(`After hash: ${this.password}`);
 
-        // this.confirmpassword = undefined;
+         //this.confirmpassword = undefined;
     }
+    
 });
 
 
