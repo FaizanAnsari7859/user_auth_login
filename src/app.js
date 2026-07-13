@@ -4,9 +4,13 @@ const path = require("path");
 const app = express();
 const hbs = require("hbs");
 const bcrypt = require("bcryptjs");
+const cookieParser = require("cookie-parser");
+const auth = require("./middleware/auth");
+
 
 require("./db/conn");
 const Register = require("./models/registers");
+const { log } = require('console');
 
 const port = process.env.PORT || 3000;
 
@@ -20,14 +24,39 @@ app.use(express.json());
 app.use(express.urlencoded({extended:false}));
 
 
-app.use(express.static(static_path))
+app.use(express.static(static_path));
 app.set("view engine", "hbs");
 app.set("views", template_path);
 hbs.registerPartials(partials_path);
+app.use (cookieParser());
+
 
 app.get("/", (req, res) => {
     res.render("index");
  });
+
+app.get("/secret", auth , (req, res) => {
+   //console.log(`this is a cookies awesame${req.cookies.jwt}`);
+    res.render("secret");
+ });
+
+app.get("/logout", auth, async(req, res) =>{
+   try {
+      console.log(res.user);
+
+      req.user.tokens = req.user.tokens.filter((currElement) =>{
+         return currElement.token !== req.token
+      })
+
+      res.clearCookie("jwt");
+      console.log("logout successfully");
+      
+      await req.user.save();
+      res.render("login");
+   } catch (error) {
+      res.status(500).send(error);   
+   }
+})
 
 app.get("/register", (req, res) => {
     res.render("register");
@@ -62,6 +91,15 @@ app.post("/register", async (req, res) => {
    const token = await registerEmployee.generateAuthToken();
    console.log("the token part" + token);
 
+
+   //the res.cookie() 
+   res.cookie("jwt", token, {
+      expires:new Date(Date.now() + 600000),
+      httpOnly:true
+   });
+   console.log("cookie");
+   
+
    const registered = await registerEmployee.save();
    console.log("the page part" + registered);
    
@@ -91,6 +129,13 @@ app.post("/login", async(req, res) =>{
 
       const token = await useremail.generateAuthToken();
    console.log("the token part " + token);
+
+   //the res.cookie() 
+   res.cookie("jwt", token, {
+      expires:new Date(Date.now() + 600000),
+      httpOnly:true
+   });
+   console.log("cookie");
 
       if (isMatch){
          res.status(201).render("index");
